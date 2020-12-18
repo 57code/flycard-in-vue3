@@ -65,7 +65,6 @@ import img3 from "../assets/3.jpg";
 import img4 from "../assets/4.jpg";
 import img5 from "../assets/5.jpg";
 
-console.log(img1);
 export default {
   components: {
     FlyCard,

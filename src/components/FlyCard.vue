@@ -1,8 +1,5 @@
 <template>
-  <div
-    style="position: relative; height: 100%; width: 100%"
-    :style="{ paddingLeft: paddingLeft + 'px' }"
-  >
+  <div style="position: relative; height: 100%; width: 100%; padding-left: 0px">
     <div
       style="
         position: absolute;
@@ -90,13 +87,14 @@
           shadowEffect: hasShadow,
           boderEffect: hasBorder,
         }"
-      >
-      </div>
+      ></div>
     </div>
   </div>
 </template>
 
 <script>
+import useTouch from "../use/touch";
+
 export default {
   props: {
     // 正常卡片宽度
@@ -155,181 +153,24 @@ export default {
       default: true,
     },
   },
-  data() {
-    return {
-      left: 0,
-      top: 0,
-      startLeft: 0,
-      startTop: 0,
-      isDrag: false,
-      isThrow: false,
-      needBack: false,
-      isAnimating: false,
-
-      left2: 0,
-      top2: 0,
-      width2: 0,
-      height2: 0,
-
-      left3: 0,
-      top3: 0,
-      width3: 0,
-      height3: 0,
-
-      left4: 0,
-      top4: 0,
-      width4: 0,
-      height4: 0,
-      opacity4: 0,
-
-      paddingLeft: 0,
-      paddingTop: 0,
-    };
-  },
-  methods: {
-    getDistance: function (x1, y1, x2, y2) {
-      var _x = Math.abs(x1 - x2);
-      var _y = Math.abs(y1 - y2);
-      return Math.sqrt(_x * _x + _y * _y);
-    },
-    touchStart: function (e) {
-      if (this.isAnimating) return;
-
-      this.isDrag = true;
-      this.needBack = false;
-      this.isThrow = false;
-      var curTouch = e.touches[0];
-      this.startLeft = curTouch.clientX - this.left;
-      this.startTop = curTouch.clientY - this.top;
-
-      this.onDragStart();
-    },
-    touchMove: function (e) {
-      if (this.isAnimating) return;
-
-      var curTouch = e.touches[0];
-      if (this.dragDirection == "all" || this.dragDirection == "horizontal")
-        this.left = curTouch.clientX - this.startLeft;
-      if (this.dragDirection == "all" || this.dragDirection == "vertical")
-        this.top = curTouch.clientY - this.startTop;
-      var distance = this.getDistance(0, 0, this.left, this.top);
-
-      this.onDragMove({ left: this.left, top: this.top, distance: distance });
-    },
-    touchCancel: function (e) {
-      var distance = this.getDistance(0, 0, this.left, this.top);
-
-      this.isDrag = false;
-      this.onDragStop({ left: this.left, top: this.top, distance: distance });
-      if (this.isAnimating) return;
-
-      var that = this;
-      var curTouch = e.touches[0];
-      var distance = this.getDistance(0, 0, this.left, this.top);
-      if (distance > this.throwTriggerDistance) {
-        this.makeCardThrow();
-      } else {
-        this.makeCardBack();
-      }
-    },
-    resetAllCardDown: function () {
-      this.left = 0;
-      this.top = 0;
-
-      this.width2 = this.cardWidth - this.leftPad * 2;
-      this.height2 = this.cardHeight - this.topPad * 2;
-      this.left2 = this.leftPad;
-      this.top2 = this.topPad * 3;
-
-      this.width3 = this.cardWidth - this.leftPad * 4;
-      this.height3 = this.cardHeight - this.topPad * 4;
-      this.left3 = this.leftPad * 2;
-      this.top3 = this.topPad * 6;
-
-      this.width4 = this.cardWidth - this.leftPad * 6;
-      this.height4 = this.cardHeight - this.topPad * 6;
-      this.left4 = this.leftPad * 3;
-      this.top4 = this.topPad * 9;
-      this.opacity4 = 0;
-    },
-    resetAllCard: function () {
-      this.resetAllCardDown();
-    },
-    makeCardThrow: function () {
-      var that = this;
-
-      this.isThrow = true;
-      this.needBack = false;
-
-      var angle = Math.atan2(this.top - 0, this.left - 0);
-      this.left = Math.cos(angle) * this.throwDistance;
-      this.top = Math.sin(angle) * this.throwDistance;
-
-      this.width2 = this.cardWidth;
-      this.height2 = this.cardHeight;
-      this.left2 = 0;
-      this.top2 = 0;
-
-      this.width3 = this.cardWidth - this.leftPad * 2;
-      this.height3 = this.cardHeight - this.topPad * 2;
-      this.left3 = this.leftPad;
-      this.top3 = this.topPad * 3;
-
-      this.width4 = this.cardWidth - this.leftPad * 4;
-      this.height4 = this.cardHeight - this.topPad * 4;
-      this.left4 = this.leftPad * 2;
-      this.top4 = this.topPad * 6;
-      this.opacity4 = 1;
-
-      this.isAnimating = true;
-
-      this.onThrowStart();
-      setTimeout(function () {
-        that.isThrow = false;
-        that.isAnimating = false;
-        that.onThrowDone();
-        that.resetAllCard();
-      }, 400);
-    },
-    makeCardBack: function () {
-      var that = this;
-
-      this.isThrow = false;
-      this.needBack = true;
-
-      if (this.needBack) {
-        this.left = 0;
-        this.top = 0;
-      }
-
-      this.isAnimating = true;
-      setTimeout(function () {
-        that.onThrowFail();
-        that.isAnimating = false;
-        that.needBack = true;
-      }, 600);
-    },
-    onDragStart: function () {
-      this.$emit("onDragStart");
-    },
-    onDragMove: function (obj) {
-      this.$emit("onDragMove", obj);
-    },
-    onDragStop: function (obj) {
-      this.$emit("onDragStop", obj);
-    },
-    onThrowFail: function () {
-      this.$emit("onThrowFail");
-    },
-    onThrowStart: function () {
-      this.$emit("onThrowStart");
-    },
-    onThrowDone: function () {
-      this.$emit("onThrowDone");
-    },
-  },
-  mounted() {
-    this.resetAllCard();
+  emits: [
+    "onDragStart",
+    "onDragMove",
+    "onDragStop",
+    "onThrowFail",
+    "onThrowStart",
+    "onThrowDone",
+  ],
+  setup(props, { emit }) {
+    const touchState = useTouch(props, {
+      onDragStart: () => emit("onDragStart"),
+      onDragMove: (obj) => emit("onDragMove", obj),
+      onDragStop: (obj) => emit("onDragStop", obj),
+      onThrowFail: () => emit("onThrowFail"),
+      onThrowStart: () => emit("onThrowStart"),
+      onThrowDone: () => emit("onThrowDone"),
+    });
+    return { ...touchState };
   },
 };
 </script>
